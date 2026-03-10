@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Stok Barang - Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; display: flex; justify-content: center; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
+        h2 { color: #1f2937; text-align: center; margin-bottom: 20px; }
+        .form-group { display: grid; grid-template-columns: 1fr 80px 120px 80px; gap: 8px; margin-bottom: 20px; }
+        input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+        button { cursor: pointer; border: none; border-radius: 6px; font-weight: bold; }
+        #btnAdd { background: #3ecf8e; color: white; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f9fafb; color: #4b5563; text-align: left; padding: 12px; border-bottom: 2px solid #eee; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+        .btn-edit { background: #fbbf24; color: white; padding: 5px 8px; margin-right: 4px; }
+        .btn-delete { background: #ef4444; color: white; padding: 5px 8px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>📦 Inventori Stok Barang</h2>
+
+    <div class="form-group">
+        <input type="text" id="nama" placeholder="Nama Barang">
+        <input type="number" id="stok" placeholder="Stok">
+        <input type="number" id="harga" placeholder="Harga">
+        <button id="btnAdd" onclick="tambahBarang()">Simpan</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Barang</th>
+                <th>Stok</th>
+                <th>Harga</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="tabelBody">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    // --- KONFIGURASI ---
+    const SUPABASE_URL = 'https://epacbxtonqlpignxjgoz.supabase.co'; 
+    const SUPABASE_KEY = 'sb_publishable__YYsMH4Lf9nFnI8tDrWAzA_DEH6IFsm'; 
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 1. Ambil Data (READ)
+    async function loadData() {
+        const { data, error } = await client
+            .from('produk')
+            .select('*')
+            .order('id', { ascending: false });
+
+        if (error) console.error(error);
+        else renderTabel(data);
+    }
+
+    // 2. Tambah Data (CREATE)
+    async function tambahBarang() {
+        const nama = document.getElementById('nama').value;
+        const stok = document.getElementById('stok').value;
+        const harga = document.getElementById('harga').value;
+
+        if (!nama || !stok) return alert('Nama dan Stok wajib diisi!');
+
+        const { error } = await client
+            .from('produk')
+            .insert([{ nama_barang: nama, stok: parseInt(stok), harga: parseInt(harga) }]);
+
+        if (error) alert(error.message);
+        else {
+            resetForm();
+            loadData();
+        }
+    }
+
+    // 3. Edit Data (UPDATE)
+    async function editBarang(id, namaLama, stokLama) {
+        const namaBaru = prompt("Ubah Nama Barang:", namaLama);
+        const stokBaru = prompt("Ubah Jumlah Stok:", stokLama);
+
+        if (namaBaru === null || stokBaru === null) return;
+
+        const { error } = await client
+            .from('produk')
+            .update({ nama_barang: namaBaru, stok: parseInt(stokBaru) })
+            .eq('id', id);
+
+        if (error) alert(error.message);
+        else loadData();
+    }
+
+    // 4. Hapus Data (DELETE)
+    async function hapusBarang(id) {
+        if (!confirm('Hapus barang ini?')) return;
+
+        const { error } = await client
+            .from('produk')
+            .delete()
+            .eq('id', id);
+
+        if (error) alert(error.message);
+        else loadData();
+    }
+
+    function renderTabel(items) {
+        const body = document.getElementById('tabelBody');
+        body.innerHTML = '';
+        items.forEach(item => {
+            body.innerHTML += `
+                <tr>
+                    <td>${item.nama_barang}</td>
+                    <td>${item.stok}</td>
+                    <td>Rp ${item.harga.toLocaleString()}</td>
+                    <td>
+                        <button class="btn-edit" onclick="editBarang(${item.id}, '${item.nama_barang}', ${item.stok})">Edit</button>
+                        <button class="btn-delete" onclick="hapusBarang(${item.id})">Hapus</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function resetForm() {
+        document.getElementById('nama').value = '';
+        document.getElementById('stok').value = '';
+        document.getElementById('harga').value = '';
+    }
+
+    // Load data pertama kali
+    loadData();
+</script>
+
+</body>
+</html>
