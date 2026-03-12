@@ -96,7 +96,8 @@
     <!-- Header / Navbar -->
     <header
         class="glass-panel sticky top-0 px-3 md:px-6 py-2 md:py-4 flex items-center justify-between z-30 transition-all border-b border-white/50">
-        <div class="flex items-center gap-2 md:gap-3 cursor-pointer select-none active:scale-95 transition-transform" onclick="location.reload()">
+        <div class="flex items-center gap-2 md:gap-3 cursor-pointer select-none active:scale-95 transition-transform"
+            onclick="location.reload()">
             <div
                 class="bg-gradient-to-br from-emerald-400 to-emerald-600 p-1.5 md:p-2 rounded-xl md:2xl text-white shadow-lg shadow-emerald-200">
                 <i data-lucide="shopping-cart" class="w-5 h-5 md:w-6 md:h-6"></i>
@@ -604,25 +605,30 @@
 
     <!-- Bottom Mobile Nav -->
     <nav class="md:hidden bg-white border-t border-slate-200 px-1 py-1.5 flex justify-around z-30 pb-safe">
-        <button onclick="switchTab('kasir')" class="flex flex-col items-center p-1.5 text-emerald-600">
+        <button onclick="switchTab('kasir')" id="mobile-tab-kasir"
+            class="flex flex-col items-center p-1.5 text-emerald-600">
             <i data-lucide="layout-grid" class="w-5 h-5"></i>
             <span class="text-[9px] font-bold mt-0.5">KASIR</span>
         </button>
-        <button onclick="switchTab('draft')" class="flex flex-col items-center p-1.5 text-slate-400 relative">
+        <button onclick="switchTab('draft')" id="mobile-tab-draft"
+            class="flex flex-col items-center p-1.5 text-slate-400 relative">
             <i data-lucide="archive" class="w-5 h-5"></i>
             <span class="text-[9px] font-bold mt-0.5">DRAFT</span>
             <span id="draftBadgeMobile"
                 class="absolute top-0.5 right-1 bg-amber-500 text-white text-[8px] px-1 rounded-full hidden">0</span>
         </button>
-        <button onclick="switchTab('inventori')" class="flex flex-col items-center p-1.5 text-slate-400">
+        <button onclick="switchTab('inventori')" id="mobile-tab-inventori"
+            class="flex flex-col items-center p-1.5 text-slate-400">
             <i data-lucide="box" class="w-5 h-5"></i>
             <span class="text-[9px] font-bold mt-0.5">PRODUK</span>
         </button>
-        <button onclick="switchTab('riwayat')" class="flex flex-col items-center p-1.5 text-slate-400">
+        <button onclick="switchTab('riwayat')" id="mobile-tab-riwayat"
+            class="flex flex-col items-center p-1.5 text-slate-400">
             <i data-lucide="history" class="w-5 h-5"></i>
             <span class="text-[9px] font-bold mt-0.5">RIWAYAT</span>
         </button>
-        <button onclick="switchTab('laporan')" class="flex flex-col items-center p-1.5 text-slate-400">
+        <button onclick="switchTab('laporan')" id="mobile-tab-laporan"
+            class="flex flex-col items-center p-1.5 text-slate-400">
             <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
             <span class="text-[9px] font-bold mt-0.5">LAPORAN</span>
         </button>
@@ -894,9 +900,15 @@
             if (selEl) selEl.classList.remove('hidden');
 
             // Update Mobile Icons
-            document.querySelectorAll('nav.md\\:hidden button').forEach(btn => btn.classList.replace('text-emerald-600', 'text-slate-400'));
-            const mobileBtn = Array.from(document.querySelectorAll('nav.md\\:hidden button')).find(b => b.innerText.toLowerCase().includes(tab));
-            if (mobileBtn) mobileBtn.classList.replace('text-slate-400', 'text-emerald-600');
+            document.querySelectorAll('nav.md\\:hidden button').forEach(btn => {
+                btn.classList.remove('text-emerald-600');
+                btn.classList.add('text-slate-400');
+            });
+            const mobileBtn = document.getElementById(`mobile-tab-${tab}`);
+            if (mobileBtn) {
+                mobileBtn.classList.remove('text-slate-400');
+                mobileBtn.classList.add('text-emerald-600');
+            }
         }
 
         function toggleCart(show) {
