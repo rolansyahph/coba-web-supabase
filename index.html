@@ -85,6 +85,65 @@
         .pb-safe {
             padding-bottom: calc(max(0.375rem, env(safe-area-inset-bottom)));
         }
+
+        /* Thermal Print Styles - FIXED */
+        @media print {
+            /* Sembunyikan SEMUA elemen di body */
+            body * {
+                display: none !important;
+            }
+
+            /* Tampilkan hanya modal struk dan isinya */
+            #modalStruk, 
+            #modalStruk *,
+            #strukContent, 
+            #strukContent * {
+                display: block !important;
+                visibility: visible !important;
+            }
+
+            /* Atur posisi modal struk agar di pojok kiri atas kertas */
+            #modalStruk {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 58mm !important; /* Lebar kertas thermal */
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            /* Hilangkan dekorasi modal saat cetak */
+            #modalStruk > div {
+                box-shadow: none !important;
+                border: none !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                border-radius: 0 !important;
+            }
+
+            /* Sembunyikan tombol tutup/cetak saat proses cetak berlangsung */
+            #modalStruk .bg-slate-50,
+            #modalStruk button {
+                display: none !important;
+            }
+
+            /* Hilangkan margin kertas dari browser */
+            @page {
+                margin: 0;
+                size: 58mm auto;
+            }
+            
+            #strukContent {
+                padding: 2mm !important;
+                width: 100% !important;
+            }
+        }
+
+        .receipt-dashed {
+            border-top: 1px dashed #cbd5e1;
+            margin: 8px 0;
+        }
     </style>
 </head>
 
@@ -168,7 +227,7 @@
                 </div>
 
                 <div id="productGrid"
-                    class="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4 overflow-y-auto scroll-hide pr-1 pb-20 md:pb-6 min-h-0 content-start">
+                    class="flex-1 grid grid-cols-2 sm:grid-cols-3  lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-4 overflow-y-auto scroll-hide pr-1 pb-20 md:pb-6 min-h-0 content-start">
                     <!-- Produk cards -->
                 </div>
             </div>
@@ -487,30 +546,59 @@
     <!-- Modal Struk -->
     <div id="modalStruk"
         class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-[70] p-4">
-        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl">
-            <div id="strukContent" class="p-6 space-y-4">
-                <div class="text-center space-y-1">
-                    <h3 class="text-lg font-bold">OL'YRA POS</h3>
-                    <p class="text-xs text-slate-500">Kota Bandung</p>
+        <div class="bg-white w-full max-w-[300px] rounded-3xl shadow-2xl overflow-hidden">
+            <div id="strukContent" class="p-6 text-slate-800">
+                <div class="text-center space-y-1 mb-4">
+                    <h3 class="text-xl font-bold tracking-tighter">OL'YRA POS</h3>
+                    <p class="text-[10px] uppercase font-bold text-slate-500">Jl. Contoh No. 123, Bandung</p>
+                    <p class="text-[10px] font-bold text-slate-500">WA: 0812-xxxx-xxxx</p>
                 </div>
-                <div class="border-t border-b border-dashed border-slate-300 py-2 text-xs space-y-1">
-                    <div class="flex justify-between"><span>No Struk:</span> <span id="struk-no"></span></div>
-                    <div class="flex justify-between"><span>Tanggal:</span> <span id="struk-tanggal"></span></div>
+
+                <div class="receipt-dashed"></div>
+                
+                <div class="text-[10px] font-bold space-y-1 py-1">
+                    <div class="flex justify-between"><span>NO:</span> <span id="struk-no"></span></div>
+                    <div class="flex justify-between"><span>TGL:</span> <span id="struk-tanggal"></span></div>
+                    <div class="flex justify-between"><span>KSR:</span> <span>Admin</span></div>
                 </div>
-                <div id="struk-items" class="text-xs space-y-1"></div>
-                <div class="border-t border-dashed border-slate-300 pt-2 text-xs space-y-1">
-                    <div class="flex justify-between font-bold"><span>Total:</span> <span id="struk-total"></span></div>
-                    <div class="flex justify-between"><span>Bayar:</span> <span id="struk-bayar"></span></div>
-                    <div class="flex justify-between"><span>Kembali:</span> <span id="struk-kembali"></span></div>
+
+                <div class="receipt-dashed"></div>
+
+                <div id="struk-items" class="text-[10px] space-y-2 py-1">
+                    <!-- Items injected here -->
                 </div>
-                <div class="text-center text-[10px] text-slate-400 pt-4">
-                    <p>Terima kasih telah berbelanja!</p>
+
+                <div class="receipt-dashed"></div>
+
+                <div class="space-y-1 py-1">
+                    <div class="flex justify-between font-bold text-xs">
+                        <span>TOTAL</span>
+                        <span id="struk-total"></span>
+                    </div>
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <span>BAYAR</span>
+                        <span id="struk-bayar"></span>
+                    </div>
+                    <div class="flex justify-between text-[10px] font-bold">
+                        <span>KEMBALI</span>
+                        <span id="struk-kembali"></span>
+                    </div>
+                </div>
+
+                <div class="receipt-dashed"></div>
+
+                <div class="text-center pt-3">
+                    <p class="text-[10px] font-bold italic text-slate-400">Terima Kasih Atas Kunjungan Anda</p>
+                    <p class="text-[9px] font-medium text-slate-300 mt-1">powered by OL'YRA</p>
                 </div>
             </div>
-            <div class="p-4 grid grid-cols-2 gap-2">
-                <button onclick="closeStrukModal()" class="py-3 font-bold text-slate-500">Tutup</button>
+            <div class="p-4 bg-slate-50 flex gap-2">
+                <button onclick="closeStrukModal()" 
+                    class="flex-1 py-3 text-xs font-bold text-slate-500 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 transition-all">TUTUP</button>
                 <button onclick="window.print()"
-                    class="bg-emerald-600 text-white font-bold py-3 rounded-xl">Cetak</button>
+                    class="flex-1 bg-emerald-600 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">
+                    <i data-lucide="printer" class="w-4 h-4"></i> CETAK
+                </button>
             </div>
         </div>
     </div>
@@ -929,12 +1017,14 @@
 
             const itemsContainer = document.getElementById('struk-items');
             itemsContainer.innerHTML = trx.detail_transaksi.map(d => `
-                <div class="flex justify-between">
-                    <div>
-                        <div>${d.produk ? d.produk.nama_barang : 'Produk Dihapus'}</div>
-                        <div class="text-slate-500">${d.jumlah} x @${parseInt(d.harga_satuan).toLocaleString('id-ID')}</div>
+                <div class="space-y-0.5">
+                    <div class="flex justify-between items-start">
+                        <span class="flex-1 pr-2">${d.produk ? d.produk.nama_barang : 'Produk Dihapus'}</span>
+                        <span class="shrink-0">${parseInt(d.subtotal).toLocaleString('id-ID')}</span>
                     </div>
-                    <div>${parseInt(d.subtotal).toLocaleString('id-ID')}</div>
+                    <div class="text-slate-400 font-medium text-[9px]">
+                        ${d.jumlah} x @${parseInt(d.harga_satuan).toLocaleString('id-ID')}
+                    </div>
                 </div>
             `).join('');
 
@@ -1115,6 +1205,7 @@
             clearCart();
             closeDraftModal();
             loadDrafts();
+            loadProduk();
             showToast('Pesanan disimpan!', 'success');
         }
 
@@ -1173,6 +1264,7 @@
             showConfirm('Hapus Draft?', 'Draft pesanan ini akan dihapus permanen.', async () => {
                 await client.from('transaksi').delete().eq('id', id);
                 loadDrafts();
+                loadProduk();
             });
         }
 

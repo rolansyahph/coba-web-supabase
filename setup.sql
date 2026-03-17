@@ -41,21 +41,14 @@ CREATE TABLE IF NOT EXISTS detail_transaksi (
 
 ALTER TABLE detail_transaksi DISABLE ROW LEVEL SECURITY;
 
--- Trigger untuk update stok otomatis saat transaksi
+-- Trigger untuk update stok otomatis saat transaksi (INSERT)
 CREATE OR REPLACE FUNCTION update_stok_setelah_transaksi()
 RETURNS TRIGGER AS $$
-DECLARE
-    trx_status TEXT;
 BEGIN
-    -- Cek status transaksi dari tabel transaksi
-    SELECT status INTO trx_status FROM transaksi WHERE id = NEW.transaksi_id;
-    
-    -- Hanya potong stok jika statusnya 'completed'
-    IF trx_status = 'completed' THEN
-        UPDATE produk
-        SET stok = stok - NEW.jumlah
-        WHERE id = NEW.produk_id;
-    END IF;
+    -- Kurangi stok untuk setiap item yang masuk (baik pending maupun completed)
+    UPDATE produk
+    SET stok = stok - NEW.jumlah
+    WHERE id = NEW.produk_id;
     
     RETURN NEW;
 END;
@@ -66,26 +59,46 @@ AFTER INSERT ON detail_transaksi
 FOR EACH ROW
 EXECUTE FUNCTION update_stok_setelah_transaksi();
 
--- Trigger untuk update stok saat status transaksi berubah menjadi 'completed'
-CREATE OR REPLACE FUNCTION update_stok_saat_lunas()
+-- Trigger untuk mengembalikan stok saat item dihapus (DELETE)
+CREATE OR REPLACE FUNCTION kembalikan_stok_setelah_hapus_detail()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Jika status berubah dari 'pending' ke 'completed'
-    IF OLD.status = 'pending' AND NEW.status = 'completed' THEN
-        -- Potong stok untuk setiap item di detail_transaksi
-        UPDATE produk p
-        SET stok = p.stok - dt.jumlah
-        FROM detail_transaksi dt
-        WHERE dt.produk_id = p.id AND dt.transaksi_id = NEW.id;
+    -- Kembalikan stok saat item transaksi dihapus atau draft dibatalkan
+    UPDATE produk
+    SET stok = stok + OLD.jumlah
+    WHERE id = OLD.produk_id;
+    
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_hapus_stok
+AFTER DELETE ON detail_transaksi
+FOR EACH ROW
+EXECUTE FUNCTION kembalikan_stok_setelah_hapus_detail();
+
+-- Trigger untuk penyesuaian stok saat jumlah item diubah (UPDATE)
+CREATE OR REPLACE FUNCTION update_stok_perubahan_detail()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF OLD.produk_id = NEW.produk_id THEN
+        -- Jika produk sama, sesuaikan selisihnya
+        UPDATE produk
+        SET stok = stok + OLD.jumlah - NEW.jumlah
+        WHERE id = NEW.produk_id;
+    ELSE
+        -- Jika produk diganti, kembalikan stok lama dan kurangi stok baru
+        UPDATE produk SET stok = stok + OLD.jumlah WHERE id = OLD.produk_id;
+        UPDATE produk SET stok = stok - NEW.jumlah WHERE id = NEW.produk_id;
     END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_lunas_stok
-AFTER UPDATE ON transaksi
+CREATE TRIGGER trg_edit_stok
+AFTER UPDATE ON detail_transaksi
 FOR EACH ROW
-EXECUTE FUNCTION update_stok_saat_lunas();
+EXECUTE FUNCTION update_stok_perubahan_detail();
 
 -- Insert dummy data produk
 INSERT INTO produk (nama_barang, stok, harga, barcode, kategori)
